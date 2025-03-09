@@ -18,7 +18,6 @@ mysql> show databases;
 | Database               |
 +------------------------+
 | Basededatos709$default |
-| Ximena2ge$default      |
 | Basededatos709$join    |
 | information_schema     |
 | performance_schema     |
