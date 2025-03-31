@@ -1,0 +1,158 @@
+Ejercicio1
+
+Reading table information for completion of table and column names
+You can turn off this feature to get a quicker startup with -A
+
+Welcome to the MySQL monitor.  Commands end with ; or \g.
+Your MySQL connection id is 95868
+Server version: 8.0.40 Source distribution
+
+Copyright (c) 2000, 2022, Oracle and/or its affiliates.
+
+Oracle is a registered trademark of Oracle Corporation and/or its
+affiliates. Other names may be trademarks of their respective
+owners.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+mysql> CREATE TABLE TablaCaso (
+    -> TablaCaso VARCHAR(10)
+    -> );
+Query OK, 0 rows affected (0.09 sec)
+
+mysql> INSERT INTO TablaCaso
+    -> VALUES 
+    -> ('A'), 
+    -> ('B'), 
+    -> ('C');
+Query OK, 3 rows affected (0.00 sec)
+Records: 3  Duplicates: 0  Warnings: 0
+
+mysql> SELECT * FROM TablaCaso;
++-----------+
+| TablaCaso |
++-----------+
+| A         |
+| B         |
+| C         |
++-----------+
+3 rows in set (0.00 sec)
+
+mysql> WITH RECURSIVE Permutaciones AS (
+    ->   SELECT '', TablaCaso AS Elemento, CAST(TablaCaso AS CHAR(100)) AS Permutacion
+    ->   FROM TablaCaso
+    ->   UNION ALL
+    ->   SELECT p.Permutacion, e.TablaCaso, CONCAT(p.Permutacion, ',', e.TablaCaso) AS NuevaPermutacion
+    ->   FROM Permutaciones p
+    ->   JOIN TablaCaso e ON NOT FIND_IN_SET(e.TablaCaso, p.Permutacion)
+    -> )
+    -> SELECT NuevaPermutacion
+    -> FROM Permutaciones
+    -> WHERE LENGTH(NuevaPermutacion) = (SELECT COUNT(*) * 2 - 1 FROM TablaCaso);
+ERROR 1054 (42S22): Unknown column 'NuevaPermutacion' in 'field list'
+mysql> WITH RECURSIVE Permutaciones AS (
+    ->   SELECT '', TablaCaso AS Elemento, CAST(TablaCaso AS CHAR(100)) AS Permutacion
+    ->   FROM TablaCaso
+    ->   UNION ALL
+    ->   SELECT p.Permutacion, e.TablaCaso, CONCAT(p.Permutacion, ',', e.TablaCaso)
+    ->   FROM Permutaciones p
+    ->   JOIN TablaCaso e ON NOT FIND_IN_SET(e.TablaCaso, p.Permutacion)
+    -> )
+    -> SELECT Permutacion AS NuevaPermutacion
+    -> FROM Permutaciones
+    -> WHERE LENGTH(Permutacion) = (SELECT COUNT(*) * 2 - 1 FROM TablaCaso);
++------------------+
+| NuevaPermutacion |
++------------------+
+| B,C,A            |
+| C,B,A            |
+| A,C,B            |
+| C,A,B            |
+| A,B,C            |
+| B,A,C            |
++------------------+
+6 rows in set (0.00 sec)
+___________________________________________________________________________________________________________
+
+
+Ejercicio2
+
+
+mysql> CREATE TABLE FlujosDeTrabajo (
+    ->     Desarrollo VARCHAR(50),
+    ->     Terminacion DATE
+    -> );
+Query OK, 0 rows affected (0.03 sec)
+mysql> INSERT INTO FlujosDeTrabajo (Desarrollo, Terminacion)
+    -> VALUES
+    -> ('RestAPI', STR_TO_DATE('06/01/2024', '%m/%d/%Y')),
+    -> ('RestAPI', STR_TO_DATE('06/14/2024', '%m/%d/%Y')),
+    -> ('RestAPI', STR_TO_DATE('06/15/2024', '%m/%d/%Y')),
+    -> ('Web', STR_TO_DATE('06/01/2014', '%m/%d/%Y')),
+    -> ('Web', STR_TO_DATE('06/02/2024', '%m/%d/%Y')),
+    -> ('Web', STR_TO_DATE('06/19/2024', '%m/%d/%Y')),
+    -> ('App', STR_TO_DATE('06/01/2024', '%m/%d/%Y')),
+    -> ('App', STR_TO_DATE('05/15/2024', '%m/%d/%Y')),
+    -> ('App', STR_TO_DATE('06/30/2024', '%m/%d/%Y'));
+Query OK, 9 rows affected (0.01 sec)
+Records: 9  Duplicates: 0  Warnings: 0
+mysql> SELECT * FROM FlujosDeTrabajo;
++------------+-------------+
+| Desarrollo | Terminacion |
++------------+-------------+
+| RestAPI    | 2024-06-01  |
+| RestAPI    | 2024-06-14  |
+| RestAPI    | 2024-06-15  |
+| Web        | 2014-06-01  |
+| Web        | 2024-06-02  |
+| Web        | 2024-06-19  |
+| App        | 2024-06-01  |
+| App        | 2024-05-15  |
+| App        | 2024-06-30  |
++------------+-------------+
+9 rows in set (0.00 sec)
+
+
+
+
+
+
+
+___________________________________________________________________________________________________________
+
+
+
+Ejercicio 3
+
+mysql> CREATE TABLE Inventario (
+    ->     Fecha DATE NOT NULL,
+    ->     Ajuste INT NOT NULL
+    -> );
+Query OK, 0 rows affected (0.02 sec)
+mysql> INSERT INTO Inventario (Fecha, Ajuste)
+    -> VALUES 
+    ->     ('2025-01-03', 100),
+    ->     ('2025-01-04', 75),
+    ->     ('2025-01-05', -150),
+    ->     ('2025-01-06', 50),
+    ->     ('2025-01-07', -70);
+Query OK, 5 rows affected (0.00 sec)
+Records: 5  Duplicates: 0  Warnings: 0
+mysql> WITH InventarioActualizado AS (
+    ->     SELECT 
+    ->         Fecha,
+    ->         Ajuste,
+    ->         SUM(Ajuste) OVER (ORDER BY Fecha) AS Inventario
+    ->     FROM Inventario
+    -> )
+    -> SELECT * FROM InventarioActualizado;
++------------+--------+------------+
+| Fecha      | Ajuste | Inventario |
++------------+--------+------------+
+| 2025-01-03 |    100 |        100 |
+| 2025-01-04 |     75 |        175 |
+| 2025-01-05 |   -150 |         25 |
+| 2025-01-06 |     50 |         75 |
+| 2025-01-07 |    -70 |          5 |
++------------+--------+------------+
+5 rows in set (0.01 sec)
