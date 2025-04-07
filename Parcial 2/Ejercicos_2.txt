@@ -1,0 +1,330 @@
+Reading table information for completion of table and column names
+You can turn off this feature to get a quicker startup with -A
+
+Welcome to the MySQL monitor.  Commands end with ; or \g.
+Your MySQL connection id is 25701090
+Server version: 8.0.40 Source distribution
+
+Copyright (c) 2000, 2022, Oracle and/or its affiliates.
+
+Oracle is a registered trademark of Oracle Corporation and/or its
+affiliates. Other names may be trademarks of their respective
+owners.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+mysql> use Ximena2ge$default;
+Database changed
+mysql> CREATE TABLE articulosuno (
+    ->     Artículo varchar(30)
+    -> );
+Query OK, 0 rows affected (0.03 sec)
+
+mysql> CREATE TABLE articulosdos (
+    ->     Articulo varchar(30)
+    -> );
+Query OK, 0 rows affected (0.03 sec)
+
+mysql> INSERT INTO articulosuno ( Artículo ) VALUES
+    -> ('Azucar'),
+    -> ('Pan'),
+    -> ('Jugo'),
+    -> ('Refresco'),
+    -> ('Harina');
+Query OK, 5 rows affected (0.00 sec)
+Records: 5  Duplicates: 0  Warnings: 0
+
+mysql> INSERT INTO articulosdos ( Articulo ) VALUES
+    -> ('Azucar'),
+    -> ('Pan'),
+    -> ('Mantequilla'),
+    -> ('Queso'),
+    -> ('Manzana');
+Query OK, 5 rows affected (0.01 sec)
+Records: 5  Duplicates: 0  Warnings: 0
+
+mysql> SELECT * from articulosuno left outer join articulosdos on articulosuno.Artículo = articulosdos.Articulo
+    -> union 
+    -> SELECT * from articulosuno right outer join articulosdos on articulosdos.Articulo = articulosuno.Artículo;
++-----------+-------------+
+| Artículo  | Articulo    |
++-----------+-------------+
+| Azucar    | Azucar      |
+| Pan       | Pan         |
+| Jugo      | NULL        |
+| Refresco  | NULL        |
+| Harina    | NULL        |
+| NULL      | Mantequilla |
+| NULL      | Queso       |
+| NULL      | Manzana     |
++-----------+-------------+
+8 rows in set (0.00 sec)
+
+mysql> CREATE TABLE ejercicio2 (
+    -> Id_empleado INT,
+    -> Id_gerente INT,
+    -> Puesto VARCHAR (30)
+    -> ); 
+Query OK, 0 rows affected (0.03 sec)
+
+mysql> INSERT INTO ejercicio2 (Id_empleado,Id_gerente,Puesto) VALUES 
+    -> (1001, ' ' ,'Presidente'),
+    -> (2002, 1001 ,'Director'),
+    -> (3003, 1001 ,'Gerente'),
+    -> (4004, 2002 ,'Ingeniero'),
+    -> (5005, 2002 ,'Contador'),
+    -> (6006, 2002 ,'Administrador');
+Query OK, 6 rows affected, 1 warning (0.01 sec)
+Records: 6  Duplicates: 0  Warnings: 1
+
+mysql> WITH RECURSIVE Jerarquia AS (
+    -> SELECT Id_empleado, Id_gerente ,Puesto, 0 AS Nivel 
+    -> FROM ejercicio2
+    -> WHERE id_gerente IS NULL
+    -> );
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '' at line 5
+mysql> WITH RECURSIVE Jerarquia AS (
+    -> SELECT Id_empleado, Id_gerente ,Puesto, 0 AS Nivel 
+    -> FROM ejercicio2
+    -> WHERE id_gerente IS NULL
+    -> 
+    -> UNION ALL
+    -> 
+    -> SELECT e.Id_empleado, e.Id_gerente, e.Puesto, j.Id_empleado +1
+    -> FROM ejercicio2 e
+    -> JOIN ejercicio2 j ON e.Id_gerente = j.Id_empleado 
+    -> ) 
+    -> ;
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '' at line 11
+mysql> WITH RECURSIVE Jerarquia AS (
+    -> SELECT Id_empleado, Id_gerente ,Puesto, 0 AS Nivel 
+    -> FROM ejercicio2
+    -> WHERE id_gerente IS NULL
+    -> 
+    -> UNION ALL
+    -> 
+    -> SELECT e.Id_empleado, e.Id_gerente, e.Puesto, j.Id_empleado +1
+    -> FROM ejercicio2 e
+    -> JOIN ejercicio2 j ON e.Id_gerente = j.Id_empleado 
+    -> );
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '' at line 11
+mysql> WITH RECURSIVE Jerarquia AS (
+    -> SELECT Id_empleado, Id_gerente ,Puesto, 0 AS Nivel 
+    -> FROM ejercicio2
+    -> WHERE id_gerente IS NULL
+    -> 
+    -> UNION ALL
+    -> 
+    -> SELECT e.Id_empleado, e.Id_gerente, e.Puesto, j.Id_empleado +1
+    -> FROM ejercicio2 e
+    -> JOIN ejercicio2 j ON e.Id_gerente = j.Id_empleado 
+    -> )
+    -> ;
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '' at line 11
+mysql> WITH RECURSIVE Jerarquia AS (
+    ->     SELECT Id_empleado, Id_gerente, Puesto, 0 AS Nivel
+    ->     FROM ejercicio2
+    ->     WHERE id_gerente IS NULL
+    -> 
+    ->     UNION ALL
+    -> 
+    ->     SELECT e.Id_empleado, e.Id_gerente, e.Puesto, j.Nivel + 1
+    ->     FROM ejercicio2 e
+    ->     JOIN Jerarquia j ON e.Id_gerente = j.Id_empleado
+    -> )
+    -> 
+    -> ;
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '' at line 11
+mysql> WITH RECURSIVE Jerarquia AS (
+    ->     SELECT Id_empleado, Id_gerente, Puesto, 0 AS Nivel
+    ->     FROM ejercicio2
+    ->     WHERE id_gerente IS NULL
+    -> 
+    ->     UNION ALL
+    -> 
+    ->     SELECT e.Id_empleado, e.Id_gerente, e.Puesto, j.Nivel + 1
+    ->     FROM ejercicio2 e
+    ->     JOIN Jerarquia j ON e.Id_gerente = j.Id_empleado
+    -> )
+    -> ;
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '' at line 11
+mysql> WITH RECURSIVE Jerarquia AS (
+    -> SELECT Id_empleado, Id_gerente, Puesto, 0 AS Nivel
+    -> FROM ejercicio2
+    -> WHERE Id_gerente IS NULL
+    -> 
+    -> UNION ALL
+    -> 
+    -> SELECT e.Id_empleado, e.Id_gerente, e.Puesto, j.Nivel + 1
+    -> FROM ejercicio2 e
+    -> JOIN Jerarquia j ON e.Id_gerente = j.Id_empleado
+    -> );
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '' at line 11
+mysql> WITH RECURSIVE Jerarquia AS (
+    -> SELECT Id_empleado, Id_gerente, Puesto, 0 AS Nivel
+    -> FROM ejercicio2
+    -> WHERE Id_gerente IS NULL
+    -> 
+    -> UNION ALL
+    -> 
+    -> SELECT e.Id_empleado, e.Id_gerente, e.Puesto, j.Nivel + 1
+    -> FROM ejercicio2 e
+    -> JOIN Jerarquia j ON e.Id_gerente = j.Id_empleado
+    -> )
+    -> ;
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '' at line 11
+mysql> WITH RECURSIVE Jerarquia AS (
+    ->     SELECT Id_empleado, Id_gerente, Puesto, 0 AS Nivel
+    ->     FROM ejercicio2
+    ->     WHERE id_gerente IS NULL
+    -> 
+    ->     UNION ALL
+    -> 
+    ->     SELECT e.Id_empleado, e.Id_gerente, e.Puesto, j.Nivel + 1
+    ->     FROM ejercicio2 e
+    ->     JOIN Jerarquia j ON e.Id_gerente = j.Id_empleado
+    -> )
+    -> ,
+    -> ;
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '' at line 12
+mysql> 
+mysql> WITH RECURSIVE Jerarquia AS (
+    ->     SELECT Id_empleado, Id_gerente, Puesto, 0 AS Nivel
+    ->     FROM ejercicio2
+    ->     WHERE id_gerente IS NULL
+    -> 
+    ->     UNION ALL
+    -> 
+    ->     SELECT e.Id_empleado, e.Id_gerente, e.Puesto, j.Nivel + 1
+    ->     FROM ejercicio2 e
+    ->     JOIN Jerarquia j ON e.Id_gerente = j.Id_empleado
+    -> );
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '' at line 11
+mysql> WITH RECURSIVE Jerarquia AS (
+    ->     SELECT Id_empleado, Id_gerente, Puesto, 0 AS Nivel
+    ->     FROM ejercicio2
+    ->     WHERE id_gerente IS NULL
+    -> 
+    ->     UNION ALL
+    -> 
+    ->     SELECT e.Id_empleado, e.Id_gerente, e.Puesto, j.Nivel + 1
+    ->     FROM ejercicio2 e
+    ->     JOIN Jerarquia j ON e.Id_gerente = j.Id_empleado
+    -> );
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '' at line 11
+mysql> WITH RECURSIVE Jerarquia AS (
+    -> SELECT Id_empleado, Id_gerente ,Puesto, 0 AS Nivel 
+    -> FROM ejercicio2
+    -> WHERE Id_gerente IS NULL
+    -> 
+    -> UNION ALL
+    -> 
+    -> SELECT e.Id_empleado, e.Id_gerente, e.Puesto, j.Id_empleado +1
+    -> FROM ejercicio2 e
+    -> JOIN ejercicio2 j ON e.Id_gerente = j.Id_empleado 
+    -> );
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '' at line 11
+mysql> WITH RECURSIVE Jerarquia AS (
+    -> SELECT Id_empleado, Id_gerente, Puesto, 0 AS Nivel
+    -> FROM ejercicio2
+    -> WHERE Id_gerente IS NULL
+    -> 
+    -> UNION ALL
+    -> 
+    -> SELECT e.Id_empleado, e.Id_gerente, e.Puesto, j.Nivel + 1
+    -> FROM ejercicio2 e
+    -> JOIN Jerarquia j ON e.Id_gerente = j.Id_empleado
+    -> );
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '' at line 11
+mysql> INSERT INTO ejercicio2 (Id_empleado, Id_gerente, Puesto) VALUES 
+    -> (1001, NULL, 'Presidente'),
+    -> (2002, 1001, 'Director'),
+    -> (3003, 1001, 'Gerente'),
+    -> (4004, 2002, 'Ingeniero'),
+    -> (5005, 2002, 'Contador'),
+    -> (6006, 2002, 'Administrador');
+Query OK, 6 rows affected (0.01 sec)
+Records: 6  Duplicates: 0  Warnings: 0
+
+mysql> WITH RECURSIVE Jerarquia AS (
+    ->     SELECT Id_empleado, Id_gerente, Puesto, 0 AS Nivel
+    ->     FROM ejercicio2
+    ->     WHERE Id_gerente IS NULL
+    -> 
+    ->     UNION ALL
+    -> 
+    ->     SELECT e.Id_empleado, e.Id_gerente, e.Puesto, j.Nivel + 1
+    ->     FROM ejercicio2 e
+    ->     JOIN Jerarquia j ON e.Id_gerente = j.Id_empleado
+    -> )
+    -> );
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near ')' at line 12
+mysql> WITH RECURSIVE Jerarquia AS (
+    ->     SELECT Id_empleado, Id_gerente, Puesto, 0 AS Nivel
+    ->     FROM ejercicio2
+    ->     WHERE Id_gerente IS NULL
+    -> 
+    ->     UNION ALL
+    -> 
+    ->     SELECT e.Id_empleado, e.Id_gerente, e.Puesto, j.Nivel + 1
+    ->     FROM ejercicio2 e
+    ->     JOIN Jerarquia j ON e.Id_gerente = j.Id_empleado
+    -> )
+    -> SELECT * FROM Jerarquia
+    -> ORDER BY Nivel, Id_empleado;
++-------------+------------+---------------+-------+
+| Id_empleado | Id_gerente | Puesto        | Nivel |
++-------------+------------+---------------+-------+
+|        1001 |       NULL | Presidente    |     0 |
+|        2002 |       1001 | Director      |     1 |
+|        2002 |       1001 | Director      |     1 |
+|        3003 |       1001 | Gerente       |     1 |
+|        3003 |       1001 | Gerente       |     1 |
+|        4004 |       2002 | Ingeniero     |     2 |
+|        4004 |       2002 | Ingeniero     |     2 |
+|        4004 |       2002 | Ingeniero     |     2 |
+|        4004 |       2002 | Ingeniero     |     2 |
+|        5005 |       2002 | Contador      |     2 |
+|        5005 |       2002 | Contador      |     2 |
+|        5005 |       2002 | Contador      |     2 |
+|        5005 |       2002 | Contador      |     2 |
+|        6006 |       2002 | Administrador |     2 |
+|        6006 |       2002 | Administrador |     2 |
+|        6006 |       2002 | Administrador |     2 |
+|        6006 |       2002 | Administrador |     2 |
++-------------+------------+---------------+-------+
+17 rows in set (0.07 sec)
+mysql> CREATE TABLE ejercicio3 (
+    ->     Id_cliente INT,
+    ->     Id_orden INT,
+    ->     Estado_destino VARCHAR(30),
+    ->     Costo VARCHAR(10)
+    -> );
+Query OK, 0 rows affected (0.03 sec)
+mysql> INSERT INTO ejercicio3 (Id_cliente, Id_orden, Estado_destino, Costo)
+    -> VALUES
+    -> (1001, 1, 'JAL', '$987'),
+    -> (1001, 2, 'CDMX', '$400'),
+    -> (1001, 3, 'CDMX', '$545'),
+    -> (1001, 4, 'CDMX', '$321'),
+    -> (2002, 5, 'MTY', '$324'),
+    -> (3003, 6, 'JAL', '$931'),
+    -> (4004, 7, 'JAL', '$876'),
+    -> (5005, 8, 'CDMX', '$567');
+Query OK, 8 rows affected (0.00 sec)
+Records: 8  Duplicates: 0  Warnings: 0
+mysql> SELECT Id_cliente, Id_orden, Estado_destino, Costo
+    -> FROM ejercicio3
+    -> WHERE Estado_destino = 'CDMX'
+    -> AND Id_cliente IN (
+    ->     SELECT Id_cliente FROM ejercicio3 WHERE Estado_destino = 'JAL'
+    -> );
++------------+----------+----------------+-------+
+| Id_cliente | Id_orden | Estado_destino | Costo |
++------------+----------+----------------+-------+
+|       1001 |        2 | CDMX           | $400  |
+|       1001 |        3 | CDMX           | $545  |
+|       1001 |        4 | CDMX           | $321  |
++------------+----------+----------------+-------+
+3 rows in set (0.00 sec)
+mysql> 
