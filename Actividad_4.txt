@@ -1,0 +1,189 @@
+Reading table information for completion of table and column names
+You can turn off this feature to get a quicker startup with -A
+
+Welcome to the MySQL monitor.  Commands end with ; or \g.
+Your MySQL connection id is 4784324
+Server version: 8.0.40 Source distribution
+
+Copyright (c) 2000, 2022, Oracle and/or its affiliates.
+
+Oracle is a registered trademark of Oracle Corporation and/or its
+affiliates. Other names may be trademarks of their respective
+owners.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+mysql> use Ximena2ge$default;
+Database changed
+mysql> CREATE TABLE FlujosDeTrabajo (
+    ->     Flujo VARCHAR(50),
+    ->     Caso_1 INT,
+    ->     Caso_2 INT,
+    ->     Caso_3 INT
+    -> );
+ERROR 1050 (42S01): Table 'FlujosDeTrabajo' already exists
+mysql> CREATE TABLE FlujosdeTrabajo (
+    -> Flujo VARCHAR(50),
+    -> Caso_1 INT,
+    -> Caso_2 INT,
+    -> Caso_3 INT
+    -> );
+Query OK, 0 rows affected (0.03 sec)
+
+mysql> INSERT INTO FlujosDeTrabajo (Flujo, Caso_1, Caso_2, Caso_3)
+    -> VALUES
+    -> ('Alta de usuario', 0, 0, 0),
+    -> ('Baja de usuario', 0, 1, 1),
+    -> ('Nueva Orden', 1, 0, 0),
+    -> ('Elimina Orden', 0, 0, 0);
+ERROR 1054 (42S22): Unknown column 'Flujo' in 'field list'
+mysql> INSERT INTO FlujosdeTrabajo (Flujo, Caso_1, Caso_2, Caso_3)
+    -> VALUES
+    -> ('Alta de usuario', 0, 0, 0),
+    -> ('Baja de usuario', 0, 1, 1),
+    -> ('Nueva Orden', 1, 0, 0),
+    -> ('Elimina Orden', 0, 0, 0);
+Query OK, 4 rows affected (0.01 sec)
+Records: 4  Duplicates: 0  Warnings: 0
+
+mysql> SELECT 
+    -> Flujo,
+    -> (Caso_1 + Caso_2 + Caso_3) AS Aprovado
+    -> FROM 
+    -> FlujosdeTrabajo;
++-----------------+----------+
+| Flujo           | Aprovado |
++-----------------+----------+
+| Alta de usuario |        0 |
+| Baja de usuario |        2 |
+| Nueva Orden     |        1 |
+| Elimina Orden   |        0 |
++-----------------+----------+
+4 rows in set (0.01 sec)
+
+mysql> CREATE TABLE Licencias (
+    -> Id_empleado INT,
+    -> Licencia VARCHAR(50)
+    -> );
+Query OK, 0 rows affected (0.02 sec)
+
+mysql> INSERT INTO Licencias (Id_empleado, Licencia)
+    -> VALUES
+    -> (1001, 'Tipo A'),
+    -> (1001, 'Tipo B'),
+    -> (1001, 'Tipo C'),
+    -> (2002, 'Tipo A'),
+    -> (2002, 'Tipo B'),
+    -> (2002, 'Tipo C'),
+    -> (3003, 'Tipo A'),
+    -> (3003, 'Tipo D'),
+    -> (4004, 'Tipo A'),
+    -> (4004, 'Tipo B'),
+    -> (4004, 'Tipo D'),
+    -> (5005, 'Tipo A'),
+    -> (5005, 'Tipo B'),
+    -> (5005, 'Tipo D');
+Query OK, 14 rows affected (0.01 sec)
+Records: 14  Duplicates: 0  Warnings: 0
+
+mysql> SELECT 
+    -> l1.Id_empleado AS Empleado_1,
+    -> l2.Id_empleado AS Empleado_2,
+    -> COUNT(l1.Licencia) AS Coincidencias
+    -> FROM Licencias l1
+    -> JOIN Licencias l2
+    -> ON l1.Licencia = l2.Licencia
+    -> AND l1.Id_empleado <> l2.Id_empleado
+    -> GROUP BY l1.Id_empleado, l2.Id_empleado
+    -> HAVING COUNT(l1.Licencia) > 1;
++------------+------------+---------------+
+| Empleado_1 | Empleado_2 | Coincidencias |
++------------+------------+---------------+
+|       5005 |       1001 |             2 |
+|       4004 |       1001 |             2 |
+|       2002 |       1001 |             3 |
+|       5005 |       2002 |             2 |
+|       4004 |       2002 |             2 |
+|       1001 |       2002 |             3 |
+|       5005 |       3003 |             2 |
+|       4004 |       3003 |             2 |
+|       5005 |       4004 |             3 |
+|       3003 |       4004 |             2 |
+|       2002 |       4004 |             2 |
+|       1001 |       4004 |             2 |
+|       4004 |       5005 |             3 |
+|       3003 |       5005 |             2 |
+|       2002 |       5005 |             2 |
+|       1001 |       5005 |             2 |
++------------+------------+---------------+
+16 rows in set (0.00 sec)
+
+mysql> SELECT 
+    ->     l1.Id_empleado AS Empleado_1,
+    ->     l2.Id_empleado AS Empleado_2,
+    ->     COUNT(l1.Licencia) AS Coincidencias
+    -> FROM Licencias l1
+    -> JOIN Licencias l2
+    ->     ON l1.Licencia = l2.Licencia
+    ->     AND l1.Id_empleado <> l2.Id_empleado
+    -> WHERE NOT EXISTS (
+    ->     SELECT 1 
+    ->     FROM Licencias l3
+    ->     WHERE l3.Id_empleado = l1.Id_empleado
+    ->     AND l3.Licencia NOT IN (SELECT Licencia FROM Licencias l4 WHERE l4.Id_empleado = l2.Id_empleado)
+    -> )
+    -> AND NOT EXISTS (
+    ->     SELECT 1 
+    ->     FROM Licencias l5
+    ->     WHERE l5.Id_empleado = l2.Id_empleado
+    ->     AND l5.Licencia NOT IN (SELECT Licencia FROM Licencias l6 WHERE l6.Id_empleado = l1.Id_empleado)
+    -> )
+    -> GROUP BY l1.Id_empleado, l2.Id_empleado
+    -> HAVING COUNT(l1.Licencia) = (SELECT COUNT(Licencia) FROM Licencias WHERE Id_empleado = l1.Id_empleado);
++------------+------------+---------------+
+| Empleado_1 | Empleado_2 | Coincidencias |
++------------+------------+---------------+
+|       2002 |       1001 |             3 |
+|       1001 |       2002 |             3 |
+|       5005 |       4004 |             3 |
+|       4004 |       5005 |             3 |
++------------+------------+---------------+
+4 rows in set (0.00 sec)
+mysql> CREATE TABLE Numeros (
+    ->  Entero INT
+    -> );
+Query OK, 0 rows affected (0.02 sec)
+mysql> INSERT INTO Numeros (Entero)
+    -> VALUES
+    -> (5), 
+    -> (6), 
+    -> (10), 
+    -> (10), 
+    -> (13),
+    -> (14), 
+    -> (17), 
+    -> (20), 
+    -> (81), 
+    -> (90), 
+    -> (76);
+Query OK, 11 rows affected (0.01 sec)
+Records: 11  Duplicates: 0  Warnings: 0
+mysql> SELECT AVG(Entero) AS Media
+    -> FROM Numeros;
++---------+
+| Media   |
++---------+
+| 31.0909 |
++---------+
+1 row in set (0.00 sec)
+mysql> SELECT AVG(Entero) AS Mediana
+    -> FROM (
+    -> SELECT Entero
+    -> FROM Numeros
+    -> ORDER BY Entero
+    -> LIMIT 1 OFFSET (SELECT COUNT(*) FROM Numeros) / 2 - 1
+    -> ) AS Central;
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syn
+tax to use near '(SELECT COUNT(*) FROM Numeros) / 2 - 1
+) AS Central' at line 6
+mysql> 
