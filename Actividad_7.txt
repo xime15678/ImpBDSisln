@@ -1,0 +1,137 @@
+Reading table information for completion of table and column names
+You can turn off this feature to get a quicker startup with -A
+
+Welcome to the MySQL monitor.  Commands end with ; or \g.
+Your MySQL connection id is 19244192
+Server version: 8.0.40 Source distribution
+
+Copyright (c) 2000, 2022, Oracle and/or its affiliates.
+
+Oracle is a registered trademark of Oracle Corporation and/or its
+affiliates. Other names may be trademarks of their respective
+owners.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+mysql> use Ximena2ge$default;
+Database changed
+mysql> CREATE TABLE jugadores (
+    -> Id_jugador INT PRIMARY KEY,
+    -> Marcador INT
+    -> );
+ERROR 1050 (42S01): Table 'jugadores' already exists
+mysql> CREATE TABLE Jugadores1 (
+    -> Id_jugador INT PRIMARY KEY,
+    -> Marcador INT
+    -> );
+Query OK, 0 rows affected (0.02 sec)
+
+mysql> INSERT INTO jugadores1 (Id_jugador, Marcador) VALUES
+    -> (1001, 2343),
+    -> (2002, 9432),
+    -> (3003, 6548),
+    -> (4004, 1054),
+    -> (5005, 6832);
+ERROR 1146 (42S02): Table 'Ximena2ge$default.jugadores1' doesn't exist
+mysql> INSERT INTO Jugadores1 (Id_jugador, Marcador) 
+    -> VALUES
+    -> (1001, 2343),
+    -> (2002, 9432),
+    -> (3003, 6548),
+    -> (4004, 1054),
+    -> (5005, 6832);
+Query OK, 5 rows affected (0.01 sec)
+Records: 5  Duplicates: 0  Warnings: 0
+
+mysql> WITH ranking AS (
+    -> SELECT Id_jugador, Marcador,
+    -> NTILE(2) OVER (ORDER BY Marcador DESC) AS Categoria
+    -> FROM jugadores
+    -> )
+    -> SELECT Categoria, Id_jugador, Marcador
+    -> FROM ranking
+    -> ORDER BY Categoria, Marcador DESC;
++-----------+------------+----------+
+| Categoria | Id_jugador | Marcador |
++-----------+------------+----------+
+|         1 |       2002 |     9432 |
+|         1 |       5005 |     6832 |
+|         1 |       3003 |     6548 |
+|         2 |       1001 |     2343 |
+|         2 |       4004 |     1054 |
++-----------+------------+----------+
+5 rows in set (0.01 sec)
+
+mysql> CREATE TABLE ordenes (
+    -> Id_orden INT PRIMARY KEY,
+    -> Id_cliente INT,
+    -> Fecha DATE,
+    -> Cantidad DECIMAL(10,2),
+    -> Estado VARCHAR(10)
+    -> );
+Query OK, 0 rows affected (0.09 sec)
+
+mysql> INSERT INTO ordenes (Id_orden, Id_cliente, Fecha, Cantidad, Estado) 
+    -> VALUES
+    -> (1, 1001, '2025-01-01', 100, 'JAL'),
+    -> (2, 3003, '2025-01-01', 100, 'COL'),
+    -> (3, 1001, '2025-01-03', 100, 'JAL'),
+    -> (4, 2002, '2025-01-02', 150, 'JAL'),
+    -> (5, 1001, '2025-01-02', 100, 'JAL'),
+    -> (6, 4004, '2025-01-05', 50, 'COL'),
+    -> (7, 1001, '2025-01-01', 150, 'JAL'),
+    -> (8, 3003, '2025-01-03', 100, 'COL'),
+    -> (9, 4004, '2025-01-04', 100, 'COL'),
+    -> (10, 1001, '2025-01-01', 75, 'JAL'),
+    -> (11, 2002, '2025-01-02', 75, 'JAL'),
+    -> (12, 3003, '2025-01-02', 100, 'COL'),
+    -> (13, 4004, '2025-01-05', 100, 'COL');
+Query OK, 13 rows affected (0.01 sec)
+Records: 13  Duplicates: 0  Warnings: 0
+mysql> SELECT Id_orden, Id_cliente, Fecha, Cantidad, Estado
+    -> FROM ordenes
+    -> ORDER BY Id_orden
+    -> LIMIT 5 OFFSET 4;
++----------+------------+------------+----------+--------+
+| Id_orden | Id_cliente | Fecha      | Cantidad | Estado |
++----------+------------+------------+----------+--------+
+|        5 |       1001 | 2025-01-02 |   100.00 | JAL    |
+|        6 |       4004 | 2025-01-05 |    50.00 | COL    |
+|        7 |       1001 | 2025-01-01 |   150.00 | JAL    |
+|        8 |       3003 | 2025-01-03 |   100.00 | COL    |
+|        9 |       4004 | 2025-01-04 |   100.00 | COL    |
++----------+------------+------------+----------+--------+
+5 rows in set (0.00 sec)
+mysql> CREATE TABLE pedidos (
+    -> Id_orden INT PRIMARY KEY,
+    -> Id_cliente INT,
+    -> Cantidad INT,
+    -> Proveedor VARCHAR(50)
+    -> );
+Query OK, 0 rows affected (0.03 sec)
+mysql> INSERT INTO pedidos (Id_orden, Id_cliente, Cantidad, Proveedor) 
+    -> VALUES
+    -> (1, 1001, 12, 'IBM'),
+    -> (2, 1001, 54, 'IBM'),
+    -> (3, 1001, 32, 'Amazon'),
+    -> (4, 2002, 7, 'Amazon'),
+    -> (5, 2002, 16, 'Amazon'),
+    -> (6, 2002, 5, 'IBM');
+Query OK, 6 rows affected (0.00 sec)
+Records: 6  Duplicates: 0  Warnings: 0
+mysql> SELECT Id_cliente, Proveedor
+    -> FROM (
+    -> SELECT Id_cliente, Proveedor, 
+    -> RANK() OVER (PARTITION BY Id_cliente ORDER BY COUNT(*) DESC) AS ranking
+    -> FROM pedidos
+    -> GROUP BY Id_cliente, Proveedor
+    -> ) AS ranked_providers
+    -> WHERE ranking = 1;
++------------+-----------+
+| Id_cliente | Proveedor |
++------------+-----------+
+|       1001 | IBM       |
+|       2002 | Amazon    |
++------------+-----------+
+2 rows in set (0.00 sec)
+mysql> 
