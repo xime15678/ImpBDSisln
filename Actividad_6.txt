@@ -1,0 +1,207 @@
+Reading table information for completion of table and column names
+You can turn off this feature to get a quicker startup with -A
+Welcome to the MySQL monitor.  Commands end with ; or \g.
+Your MySQL connection id is 7734269
+Server version: 8.0.40 Source distribution
+Copyright (c) 2000, 2022, Oracle and/or its affiliates.
+Oracle is a registered trademark of Oracle Corporation and/or its
+affiliates. Other names may be trademarks of their respective
+owners.
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+mysql> CREATE TABLE Productos (
+    -> Producto VARCHAR(50),
+    -> Cantidad INT
+    -> );
+Query OK, 0 rows affected (0.04 sec)
+mysql> INSERT INTO Productos (Producto, Cantidad)
+    -> VALUES 
+    -> ('Lápiz', 3),
+    -> ('Borrador', 4),
+    -> ('Cuaderno', 2);
+Query OK, 3 rows affected (0.00 sec)
+Records: 3  Duplicates: 0  Warnings: 0
+mysql> CREATE TABLE Numeros (
+    -> Numero INT
+    -> );
+ERROR 1050 (42S01): Table 'Numeros' already exists
+mysql> CREATE TABLE Numeros1 (
+    -> Numero INT
+    -> );
+Query OK, 0 rows affected (0.02 sec)
+mysql> INSERT INTO Numeros1 (Numero)
+    -> VALUES (1), (2), (3), (4), (5); 
+Query OK, 5 rows affected (0.01 sec)
+Records: 5  Duplicates: 0  Warnings: 0
+mysql> SELECT 
+    ->  p.Producto,
+    ->  1 AS Cantidad
+    -> FROM 
+    ->     Productos p
+    -> JOIN 
+    ->     Numeros1 n
+    -> ON 
+    ->     n.Numero <= p.Cantidad;
++----------+----------+
+| Producto | Cantidad |
++----------+----------+
+| Cuaderno |        1 |
+| Borrador |        1 |
+| Lápiz    |        1 |
+| Cuaderno |        1 |
+| Borrador |        1 |
+| Lápiz    |        1 |
+| Borrador |        1 |
+| Lápiz    |        1 |
+| Borrador |        1 |
++----------+----------+
+9 rows in set (0.01 sec)
+
+mysql> CREATE TABLE asientos (
+    -> num_asiento INT
+    -> );
+ERROR 1050 (42S01): Table 'asientos' already exists
+mysql> SELECT * FROM asientos;
++-------------+
+| num_asiento |
++-------------+
+|           7 |
+|          13 |
+|          14 |
+|          15 |
+|          27 |
+|          28 |
+|          29 |
+|          30 |
+|          31 |
+|          32 |
+|          33 |
+|          34 |
+|          35 |
+|          52 |
+|          53 |
+|          54 |
++-------------+
+16 rows in set (0.01 sec)
+mysql> SELECT espacio_inicio, espacio_final
+    -> FROM (
+    ->     SELECT 
+    ->         LAG(num_asiento + 1) OVER (ORDER BY num_asiento) AS espacio_inicio,
+    ->         num_asiento - 1 AS espacio_final
+    ->     FROM asientos
+    -> ) subquery
+    -> WHERE espacio_inicio <= espacio_final;
++----------------+---------------+
+| espacio_inicio | espacio_final |
++----------------+---------------+
+|              8 |            12 |
+|             16 |            26 |
+|             36 |            51 |
++----------------+---------------+
+3 rows in set (0.04 sec)
+mysql> WITH espacios AS (
+    ->     SELECT 
+    ->         COALESCE(LAG(num_asiento + 1) OVER (ORDER BY num_asiento), 1) AS espacio_inicio,
+    ->         num_asiento - 1 AS espacio_final
+    ->     FROM asientos
+    ->     UNION ALL
+    ->     SELECT MAX(num_asiento) + 1 AS espacio_inicio, NULL AS espacio_final
+    ->     FROM asientos
+    -> )
+    -> SELECT espacio_inicio, espacio_final
+    -> FROM espacios
+    -> WHERE espacio_inicio <= espacio_final OR espacio_final IS NULL;
++----------------+---------------+
+| espacio_inicio | espacio_final |
++----------------+---------------+
+|              1 |             6 |
+|              8 |            12 |
+|             16 |            26 |
+|             36 |            51 |
+|             55 |          NULL |
++----------------+---------------+
+5 rows in set (0.01 sec)
+mysql> SELECT espacio_inicio, espacio_final
+    -> FROM (
+    ->     SELECT 
+    ->         COALESCE(LAG(num_asiento + 1) OVER (ORDER BY num_asiento), 1) AS espacio_inicio,
+    ->         num_asiento - 1 AS espacio_final
+    ->     FROM asientos
+    ->     WHERE num_asiento <= 54 ) subquery
+    -> WHERE espacio_inicio <= espacio_final AND espacio_inicio <= 54;
++----------------+---------------+
+| espacio_inicio | espacio_final |
++----------------+---------------+
+|              1 |             6 |
+|              8 |            12 |
+|             16 |            26 |
+|             36 |            51 |
++----------------+---------------+
+4 rows in set (0.00 sec)
+mysql> SELECT SUM(espacio_final - espacio_inicio + 1) AS total_disponibles
+    -> FROM (
+    ->     SELECT COALESCE(LAG(num_asiento + 1) OVER (ORDER BY num_asiento), 1) AS espacio_inicio,
+    ->            num_asiento - 1 AS espacio_final
+    ->     FROM asientos
+    ->     WHERE num_asiento <= 54
+    -> ) subquery
+    -> WHERE espacio_inicio <= espacio_final;
++-------------------+
+| total_disponibles |
++-------------------+
+|                38 |
++-------------------+
+1 row in set (0.01 sec)
+
+mysql> CREATE TABLE periodos (
+    ->     inicio DATE,
+    ->     final DATE
+    -> );
+Query OK, 0 rows affected (0.05 sec)
+mysql> INSERT INTO periodos VALUES
+    -> ('2025-01-01', '2025-01-05'),
+    -> ('2025-01-03', '2025-01-09'),
+    -> ('2025-01-10', '2025-01-11'),
+    -> ('2025-01-12', '2025-01-16'),
+    -> ('2025-01-15', '2025-01-19');
+Query OK, 5 rows affected (0.01 sec)
+Records: 5  Duplicates: 0  Warnings: 0
+mysql> WITH periodos_ordenados AS (
+    ->     SELECT inicio, final,
+    ->            LAG(final) OVER (ORDER BY inicio) AS final_anterior
+    ->     FROM periodos
+    -> ),
+    -> fusionados AS (
+    ->     SELECT inicio,
+    ->            COALESCE(
+    ->                MAX(final) OVER (PARTITION BY SUM(CASE WHEN inicio > final_anterior THEN 1 ELSE 0 END) OVER (ORDER BY inicio)),
+    ->                final
+    ->            ) AS final
+    ->     FROM periodos_ordenados
+    -> )
+    -> SELECT DISTINCT inicio, final
+    -> FROM fusionados
+    -> ORDER BY inicio;
+ERROR 3595 (HY000): You cannot nest a window function in the specification of window '<unnamed window>'.
+mysql> WITH periodos_ordenados AS (
+    ->     SELECT inicio, final,
+    ->            LAG(final) OVER (ORDER BY inicio) AS final_anterior
+    ->     FROM periodos
+    -> ),
+    -> agrupados AS (
+    ->     SELECT inicio, final,
+    ->            SUM(CASE WHEN inicio > final_anterior THEN 1 ELSE 0 END) OVER (ORDER BY inicio) AS grupo
+    ->     FROM periodos_ordenados
+    -> )
+    -> SELECT MIN(inicio) AS inicio, MAX(final) AS final
+    -> FROM agrupados
+    -> GROUP BY grupo
+    -> ORDER BY inicio;
++------------+------------+
+| inicio     | final      |
++------------+------------+
+| 2025-01-01 | 2025-01-09 |
+| 2025-01-10 | 2025-01-11 |
+| 2025-01-12 | 2025-01-19 |
++------------+------------+
+3 rows in set (0.01 sec)
+mysql> 
