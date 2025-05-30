@@ -1,0 +1,32 @@
+    -> JOIN Tiempos_Manufactura tm ON o.Producto = tm.Producto
+    -> GROUP BY o.Id, o.Producto, o.Dias_para_entregar;
++----+-----------+-----------------+--------------------+------------+
+| Id | Producto  | Dias_para_armar | Dias_para_entregar | Calendario |
++----+-----------+-----------------+--------------------+------------+
+|  1 | Amanecer  |               7 |                  7 | En tiempo  |
+|  2 | Atardecer |               7 |                  3 | Atrasado   |
+|  3 | Anochecer |               3 |                  9 | Adelantado |
++----+-----------+-----------------+--------------------+------------+
+3 rows in set (0.00 sec)
+mysql> SELECT 
+    ->   o.Id, 
+    ->    o.Producto, 
+    ->     MAX(tm.Dias_de_Manufactura) AS Dias_para_armar, 
+    ->     o.Dias_para_entregar,
+    ->     CASE 
+    ->         WHEN MAX(tm.Dias_de_Manufactura) = o.Dias_para_entregar THEN 'En tiempo'
+    ->         WHEN MAX(tm.Dias_de_Manufactura) < o.Dias_para_entregar THEN 'Atrasado'
+    ->         ELSE 'Adelantado '
+    ->     END AS Calendario
+    -> FROM Ordenes o
+    -> JOIN Tiempos_Manufactura tm ON o.Producto = tm.Producto
+    -> GROUP BY o.Id, o.Producto, o.Dias_para_entregar;
++----+-----------+-----------------+--------------------+-------------+
+| Id | Producto  | Dias_para_armar | Dias_para_entregar | Calendario  |
++----+-----------+-----------------+--------------------+-------------+
+|  1 | Amanecer  |               7 |                  7 | En tiempo   |
+|  2 | Atardecer |               7 |                  3 | Adelantado  |
+|  3 | Anochecer |               3 |                  9 | Atrasado    |
++----+-----------+-----------------+--------------------+-------------+
+3 rows in set (0.01 sec)
+mysql> 
